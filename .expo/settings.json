@@ -1,0 +1,7 @@
+{
+  "urlRandomness": "r5-sht",
+  "hostType": "tunnel",
+  "lanType": "ip",
+  "dev": true,
+  "minify": false
+}
