@@ -1,8 +1,14 @@
-import react from 'React';
-import {Dimensions, View,Text } from 'react-native'; 
+import React from 'react';
+import {Dimensions, View, Text} from 'react-native';
 
-const { height, width } = Dimensions.get('window');
+const {height, width} = Dimensions.get ('window');
 
-const LoginScreen = props => <View style={{flex: 1,justifyContent: 'center', width,height}}><Text style={{width, height: 100, fontSize: 50, alignSelf:'center'}}>Login</Text></View>
+const LoginScreen = props => (
+  <View style={{flex: 1, justifyContent: 'center', width, height}}>
+    <Text style={{width, height: 100, fontSize: 50, alignSelf: 'center'}}>
+      Login
+    </Text>
+  </View>
+);
 
 export default LoginScreen;
