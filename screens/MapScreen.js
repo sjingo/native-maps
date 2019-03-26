@@ -1,12 +1,13 @@
 import React from 'react';
 import {Dimensions, View } from 'react-native';
 import MapHome from './../components/MapHome';
- import {Input, Text} from 'react-native-elements';
+import {Input} from 'react-native-elements';
+import withUserLocation from '../hocs/withUserLocation';
 // import Inputs from './../components/WhereTo'
 
 const { height, width } = Dimensions.get('window');
 
-export default class Map extends React.Component {
+class Map extends React.Component {
   static navigationOptions = {
     title: 'Map',
   };
@@ -18,6 +19,22 @@ export default class Map extends React.Component {
      }],
      location: false
   }
+  componentDidMount(){
+    console.warn("on mount", this.props.location);
+    const {latitude,longitude}= this.props.location.coords
+    this.setState({
+      markers:[{
+        coordinate:{
+          latitude,
+          longitude,
+          title: 'last location',
+          description: 'current or most recent location'
+        },
+      }]
+    })
+  }
+
+  
   setLocation = location=> this.setState({location})
   render() {
     const {markers} = this.state;
@@ -30,5 +47,6 @@ export default class Map extends React.Component {
       </View>
     );
   }
-  
 }
+
+export default withUserLocation(Map);
