@@ -1,242 +1,73 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Text,
-  Button,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
-import Touchable from 'react-native-platform-touchable';
+import {Dimensions, View} from 'react-native';
+import MapHome from './../components/MapHome';
+import {Input} from 'react-native-elements';
+import withUserLocation from '../hocs/withUserLocation';
+// import Inputs from './../components/WhereTo'
 
-import {Permissions, Location} from 'expo';
+const {height, width} = Dimensions.get ('window');
 
-const EXAMPLES = [
-  '1 Hacker Way',
-  {latitude: 49.28, longitude: -123.12},
-  'Palo Alto Caltrain Station (this one will error)',
-  'Rogers Arena, Vancouver',
-  {latitude: 0, longitude: 0},
-];
-
-export default class GeocodingScreen extends React.Component {
+class Map extends React.Component {
   static navigationOptions = {
-    title: 'Geocoding',
+    title: 'Map',
   };
-
   state = {
-    selectedExample: EXAMPLES[0],
-    result: '',
-    inProgress: false,
+    markers: [
+      {
+        coordinate: {
+          latitude: 53.835927,
+          longitude: -1.776978,
+        },
+        title: 'Shipley',
+        description: 'Center of the universe',
+      },
+    ],
+    location: false,
   };
-
   componentDidMount () {
-    Permissions.askAsync (Permissions.LOCATION);
+    console.warn ('on mount', this.props.location);
+    const {latitude, longitude} = this.props.location.coords;
+    this.setState ({
+      markers: [
+        {
+          coordinate: {
+            latitude,
+            longitude,
+            title: 'last location',
+            description: 'current or most recent location',
+          },
+        },
+      ],
+    });
   }
 
+  setLocation = location => this.setState ({location});
   render () {
-    let {selectedExample} = this.state;
-
+    const {markers} = this.state;
     return (
-      <View style={styles.container}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>Select a location</Text>
-        </View>
-
-        <View style={styles.examplesContainer}>
-          {EXAMPLES.map (this._renderExample)}
-        </View>
-
-        <View style={styles.separator} />
-
-        <View style={styles.actionContainer}>
-          <Button
-            onPress={this._attemptGeocodeAsync}
-            title="Geocode"
-            disabled={typeof selectedExample !== 'string'}
-            style={styles.button}
-          />
-          <Button
-            onPress={this._attemptReverseGeocodeAsync}
-            title="Reverse Geocode"
-            disabled={typeof selectedExample !== 'object'}
-            style={styles.button}
+      <View style={{flex: 1, width, height}}>
+        <View
+          style={{
+            padding: 10,
+            position: 'absolute',
+            top: 50,
+            width,
+            height: 100,
+            flex: 1,
+            zIndex: 1,
+          }}
+        >
+          <Input
+            labelStyle={{backgroundColor: 'white'}}
+            label="Where to?"
+            raised
+            inputContainerStyle={{backgroundColor: 'white'}}
           />
         </View>
-
-        <View style={styles.separator} />
-
-        {this._maybeRenderResult ()}
+        <MapHome markers={markers} setLocation={this.setLocation} />
       </View>
     );
   }
-
-  _attemptReverseGeocodeAsync = async () => {
-    this.setState ({inProgress: true});
-    try {
-      let result = await Location.reverseGeocodeAsync (
-        this.state.selectedExample
-      );
-      this.setState ({result});
-    } catch (e) {
-      this.setState ({error: e});
-    } finally {
-      this.setState ({inProgress: false});
-    }
-  };
-
-  _attemptGeocodeAsync = async () => {
-    this.setState ({inProgress: true, error: null});
-    try {
-      let result = await Location.geocodeAsync (this.state.selectedExample);
-      this.setState ({result});
-    } catch (e) {
-      this.setState ({error: e.message});
-    } finally {
-      this.setState ({inProgress: false});
-    }
-  };
-
-  _maybeRenderResult = () => {
-    let {selectedExample} = this.state;
-    let text = typeof selectedExample === 'string'
-      ? selectedExample
-      : JSON.stringify (selectedExample);
-
-    if (this.state.inProgress) {
-      return <ActivityIndicator style={{marginTop: 10}} />;
-    } else if (this.state.result) {
-      return (
-        <Text style={styles.resultText}>
-          {text} resolves to {JSON.stringify (this.state.result)}
-        </Text>
-      );
-    } else if (this.state.error) {
-      return (
-        <Text style={styles.errorResultText}>
-          {text} cannot resolve: {JSON.stringify (this.state.error)}
-        </Text>
-      );
-    }
-  };
-
-  _renderExample = (example, i) => {
-    let {selectedExample} = this.state;
-    let isSelected = selectedExample === example;
-    let text = typeof example === 'string' ? example : JSON.stringify (example);
-
-    return (
-      <Touchable
-        key={i}
-        hitSlop={{top: 10, bottom: 10, left: 20, right: 20}}
-        onPress={() => this._selectExample (example)}
-      >
-        <Text
-          style={[styles.exampleText, isSelected && styles.selectedExampleText]}
-        >
-          {text}
-        </Text>
-      </Touchable>
-    );
-  };
-
-  _selectExample = example => {
-    if (this.state.inProgress) {
-      return;
-    }
-
-    this.setState ({selectedExample: example, result: '', error: ''});
-  };
 }
 
-const styles = StyleSheet.create ({
-  container: {
-    flex: 1,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#eee',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-  headerContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    marginHorizontal: 20,
-    marginBottom: 0,
-    marginTop: 20,
-  },
-  exampleText: {
-    fontSize: 15,
-    color: '#ccc',
-    marginVertical: 10,
-  },
-  examplesContainer: {
-    paddingTop: 15,
-    paddingBottom: 5,
-    paddingHorizontal: 20,
-  },
-  selectedExampleText: {
-    color: 'black',
-  },
-  resultText: {
-    padding: 20,
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  errorResultText: {
-    padding: 20,
-    color: 'red',
-  },
-  button: {
-    ...Platform.select ({
-      android: {
-        marginBottom: 10,
-      },
-    }),
-  },
-});
-
-// import React from 'react';
-// import {Dimensions, View } from 'react-native';
-// import MapHome from './../components/MapHome';
-//  import {Input, Text} from 'react-native-elements';
-// // import Inputs from './../components/WhereTo'
-
-// const { height, width } = Dimensions.get('window');
-
-// export default class Map extends React.Component {
-//   static navigationOptions = {
-//     title: 'Map',
-//   };
-//   state ={
-//     markers: [ { coordinate: {
-//        latitude: 53.835927, longitude: -1.776978 },
-//        title: "Shipley",
-//        description: "Center of the universe",
-//      }],
-//      location: false
-//   }
-//   setLocation = location=> this.setState({location})
-//   render() {
-//     const {markers} = this.state;
-//     return (
-//       <View style={{ flex: 1, width, height }}>
-//         <View style={{ padding: 10, position: 'absolute', top: 50,width,height: 100,flex: 1,zIndex:1,  }}>
-//           <Input labelStyle={{backgroundColor:'white'}} label="Where to?" raised inputContainerStyle={{backgroundColor:'white'}} />
-//         </View>
-//         <MapHome markers={markers} setLocation={this.setLocation} />
-//       </View>
-//     );
-//   }
-
-// }
+export default withUserLocation (Map);

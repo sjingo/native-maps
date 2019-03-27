@@ -19,18 +19,25 @@ class MapHome extends React.Component {
     }
   }
   _getLocationAsync = async () => {
-    let {status} = await Permissions.askAsync (Permissions.LOCATION);
-    if (status !== 'granted') {
+    try {
+      let {status} = await Permissions.askAsync (Permissions.LOCATION);
+      if (status !== 'granted') {
+        this.setState ({
+          errorMessage: 'Permission to access location was denied',
+        });
+      }
+
+      let location = await Location.getCurrentPositionAsync ({
+        enableHighAccuracy: true,
+      });
+      this.setState ({location});
+      this.props.setLocation (location);
+    } catch (err) {
+      console.log (err);
       this.setState ({
-        errorMessage: 'Permission to access location was denied',
+        errorMessage: 'There was an error, sorry',
       });
     }
-
-    let location = await Location.getCurrentPositionAsync ({
-      enableHighAccuracy: true,
-    });
-    this.setState ({location});
-    this.props.setLocation (location);
   };
 
   render () {
